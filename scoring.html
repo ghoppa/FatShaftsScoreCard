@@ -3,25 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <title>Archery Scorecard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
-      padding: 20px;
+      padding: 10px;
       text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8em;
     }
 
     table {
       width: 100%;
-      max-width: 850px;
-      margin: 15px auto;
       border-collapse: collapse;
       background: white;
+      overflow-x: auto;
+      display: block; /* make table scrollable horizontally */
     }
 
     th, td {
       border: 1px solid #ccc;
-      padding: 8px;
+      padding: 6px;
+      text-align: center;
+      min-width: 50px;
     }
 
     th {
@@ -36,7 +43,9 @@
 
     .buttons {
       margin: 15px auto;
-      max-width: 850px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     button {
@@ -46,6 +55,8 @@
       cursor: pointer;
       border-radius: 6px;
       border: none;
+      flex: 1 0 28%; /* responsive buttons, wrap 3 per row */
+      max-width: 100px;
     }
 
     .x { background: gold; font-weight: bold; }
@@ -54,8 +65,8 @@
     .print { background: #2ecc71; color: white; }
 
     #grandTotal {
-      font-size: 1.4em;
-      margin-top: 15px;
+      font-size: 1.3em;
+      margin-top: 10px;
       font-weight: bold;
     }
 
@@ -89,19 +100,21 @@
   <button class="print" onclick="window.print()">Print to PDF</button>
 </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>End</th>
-      <th>Arrow 1</th>
-      <th>Arrow 2</th>
-      <th>Arrow 3</th>
-      <th>End Total</th>
-      <th>Running Total</th>
-    </tr>
-  </thead>
-  <tbody id="scoreTable"></tbody>
-</table>
+<div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>End</th>
+        <th>Arrow 1</th>
+        <th>Arrow 2</th>
+        <th>Arrow 3</th>
+        <th>End Total</th>
+        <th>Running Total</th>
+      </tr>
+    </thead>
+    <tbody id="scoreTable"></tbody>
+  </table>
+</div>
 
 <div id="grandTotal">Total Score: 0</div>
 
