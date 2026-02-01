@@ -5,41 +5,51 @@
 <title>Archery Scorecard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: Arial, sans-serif;
   background: #f4f6f8;
-  margin: 0;
-  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   text-align: center;
 }
 
 h1 {
-  font-size: 1.5em;
-  margin-bottom: 5px;
+  font-size: 4vmin;
+  margin: 0.5vmin 0;
 }
 
 p {
-  font-size: 0.95em;
-  margin-bottom: 8px;
+  font-size: 3vmin;
+  margin: 0.5vmin 0;
 }
 
 .table-container {
-  width: 100%;
-  overflow-x: auto;
-  margin-bottom: 8px;
+  width: 95%;
+  flex: 1 1 auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  font-size: 0.9em;
+  font-size: 3vmin;
   table-layout: fixed;
+  flex: 1;
 }
 
 th, td {
   border: 1px solid #ccc;
-  padding: 4px;
+  padding: 2px;
   text-align: center;
   word-wrap: break-word;
 }
@@ -47,7 +57,6 @@ th, td {
 th {
   background: #2c3e50;
   color: white;
-  font-size: 0.85em;
 }
 
 .end-total, .running-total {
@@ -55,47 +64,39 @@ th {
   background: #ecf0f1;
 }
 
+/* Buttons grid */
 .buttons-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  margin-top: 5px;
+  gap: 2px;
+  width: 95%;
 }
 
 button {
-  padding: 10px 0;
-  font-size: 14px;
-  cursor: pointer;
+  font-size: 3vmin;
+  padding: 4px 0;
   border-radius: 6px;
   border: none;
+  cursor: pointer;
 }
 
 .x { background: gold; font-weight: bold; }
 .score { background: #3498db; color: white; }
 .clear { background: #e74c3c; color: white; }
-.print { background: #2ecc71; color: white; margin-top: 8px; width: 100%; }
+.print { background: #2ecc71; color: white; width: 95%; margin-top: 2px; font-size: 3vmin; }
 
 #grandTotal {
-  font-size: 1.1em;
-  margin-top: 6px;
+  font-size: 3.5vmin;
   font-weight: bold;
+  margin: 2px 0;
 }
 
-/* Adjust for smaller screens */
-@media (max-width: 480px) {
-  table { font-size: 0.75em; }
-  th, td { padding: 3px; }
-  button { font-size: 12px; padding: 8px 0; }
-  h1 { font-size: 1.3em; }
-  p { font-size: 0.85em; }
-}
-
-/* Print-friendly CSS */
+/* Print */
 @media print {
   body { background: white; }
   .buttons-grid, .print, #grandTotal { display: none; }
   table { page-break-inside: avoid; }
-  th, td { border: 1px solid #000; padding: 4px; }
+  th, td { border: 1px solid #000; padding: 2px; }
 }
 </style>
 </head>
@@ -122,7 +123,6 @@ button {
 
 <div id="grandTotal">Total Score: 0</div>
 
-<!-- Buttons grid -->
 <div class="buttons-grid">
   <button class="x" onclick="addScore(10,true)">X</button>
   <button class="score" onclick="addScore(10)">10</button>
@@ -138,7 +138,6 @@ button {
   <button class="clear" onclick="clearEnd()">Clear</button>
 </div>
 
-<!-- Print button always at bottom -->
 <button class="print" onclick="window.print()">Print Scorecard</button>
 
 <script>
@@ -151,7 +150,7 @@ const scores = [];
 const display = [];
 
 // Build table rows
-for (let i = 0; i < 10; i++) {
+for(let i=0;i<10;i++){
   scores.push([]);
   display.push([]);
   const row = document.createElement("tr");
@@ -173,7 +172,7 @@ function addScore(value,isX=false){
   display[currentEnd].push(isX?"X":value);
   sortAndRender(currentEnd);
   currentArrow++;
-  if(currentArrow===3){currentArrow=0; currentEnd++;}
+  if(currentArrow===3){currentArrow=0;currentEnd++;}
   calculateTotals();
 }
 
@@ -187,16 +186,16 @@ function sortAndRender(endIndex){
     if(b.value===10) return 1;
     return b.value-b.value;
   });
-  scores[endIndex] = combined.map(x=>x.value);
-  display[endIndex] = combined.map(x=>x.label);
+  scores[endIndex]=combined.map(x=>x.value);
+  display[endIndex]=combined.map(x=>x.label);
   for(let i=0;i<3;i++){
-    document.getElementById(`e${endIndex}a${i}`).textContent = display[endIndex][i]||"";
+    document.getElementById(`e${endIndex}a${i}`).textContent=display[endIndex][i]||"";
   }
 }
 
 // Clear end
 function clearEnd(){
-  let endToClear = currentArrow===0 && currentEnd>0 ? currentEnd-1 : currentEnd;
+  let endToClear=currentArrow===0 && currentEnd>0? currentEnd-1: currentEnd;
   if(endToClear<0 || endToClear>=10) return;
   scores[endToClear]=[];
   display[endToClear]=[];
@@ -210,7 +209,7 @@ function clearEnd(){
   calculateTotals();
 }
 
-// Calculate totals
+// Totals
 function calculateTotals(){
   let grandTotal=0;
   scores.forEach((end,e)=>{
