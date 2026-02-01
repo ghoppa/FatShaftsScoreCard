@@ -24,6 +24,7 @@ p {
 }
 
 .table-container {
+  width: 100%;
   overflow-x: auto;
   margin-bottom: 8px;
 }
@@ -54,28 +55,25 @@ th {
   background: #ecf0f1;
 }
 
-.buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+.buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
   margin-top: 5px;
 }
 
 button {
-  padding: 8px 10px;
-  margin: 2px;
+  padding: 10px 0;
   font-size: 14px;
   cursor: pointer;
   border-radius: 6px;
   border: none;
-  flex: 1 0 21%; /* 4 buttons per row max */
-  max-width: 70px;
 }
 
 .x { background: gold; font-weight: bold; }
 .score { background: #3498db; color: white; }
 .clear { background: #e74c3c; color: white; }
-.print { background: #2ecc71; color: white; }
+.print { background: #2ecc71; color: white; margin-top: 8px; width: 100%; }
 
 #grandTotal {
   font-size: 1.1em;
@@ -83,11 +81,11 @@ button {
   font-weight: bold;
 }
 
-/* Adjustments for smaller screens */
-@media (max-width: 375px) {
-  table { font-size: 0.8em; }
+/* Adjust for smaller screens */
+@media (max-width: 480px) {
+  table { font-size: 0.75em; }
   th, td { padding: 3px; }
-  button { font-size: 12px; max-width: 60px; flex: 1 0 22%; }
+  button { font-size: 12px; padding: 8px 0; }
   h1 { font-size: 1.3em; }
   p { font-size: 0.85em; }
 }
@@ -95,7 +93,7 @@ button {
 /* Print-friendly CSS */
 @media print {
   body { background: white; }
-  .buttons, #grandTotal { display: none; }
+  .buttons-grid, .print, #grandTotal { display: none; }
   table { page-break-inside: avoid; }
   th, td { border: 1px solid #000; padding: 4px; }
 }
@@ -124,8 +122,9 @@ button {
 
 <div id="grandTotal">Total Score: 0</div>
 
-<div class="buttons">
-  <button class="x" onclick="addScore(10, true)">X</button>
+<!-- Buttons grid -->
+<div class="buttons-grid">
+  <button class="x" onclick="addScore(10,true)">X</button>
   <button class="score" onclick="addScore(10)">10</button>
   <button class="score" onclick="addScore(9)">9</button>
   <button class="score" onclick="addScore(8)">8</button>
@@ -136,9 +135,11 @@ button {
   <button class="score" onclick="addScore(3)">3</button>
   <button class="score" onclick="addScore(2)">2</button>
   <button class="score" onclick="addScore(1)">1</button>
-  <button class="clear" onclick="clearEnd()">Clear End</button>
-  <button class="print" onclick="window.print()">Print</button>
+  <button class="clear" onclick="clearEnd()">Clear</button>
 </div>
+
+<!-- Print button always at bottom -->
+<button class="print" onclick="window.print()">Print Scorecard</button>
 
 <script>
 const tableBody = document.getElementById("scoreTable");
@@ -155,7 +156,7 @@ for (let i = 0; i < 10; i++) {
   display.push([]);
   const row = document.createElement("tr");
   row.innerHTML = `
-    <td>${i + 1}</td>
+    <td>${i+1}</td>
     <td id="e${i}a0"></td>
     <td id="e${i}a1"></td>
     <td id="e${i}a2"></td>
@@ -166,17 +167,17 @@ for (let i = 0; i < 10; i++) {
 }
 
 // Add score
-function addScore(value, isX=false){
+function addScore(value,isX=false){
   if(currentEnd>=10) return;
   scores[currentEnd].push(value);
-  display[currentEnd].push(isX ? "X" : value);
+  display[currentEnd].push(isX?"X":value);
   sortAndRender(currentEnd);
   currentArrow++;
-  if(currentArrow===3){ currentArrow=0; currentEnd++; }
+  if(currentArrow===3){currentArrow=0; currentEnd++;}
   calculateTotals();
 }
 
-// Sort: X → 10 → highest→lowest
+// Sort X → 10 → highest→lowest
 function sortAndRender(endIndex){
   const combined = scores[endIndex].map((v,i)=>({value:v,label:display[endIndex][i]}));
   combined.sort((a,b)=>{
@@ -184,12 +185,12 @@ function sortAndRender(endIndex){
     if(b.label==="X") return 1;
     if(a.value===10) return -1;
     if(b.value===10) return 1;
-    return b.value - a.value;
+    return b.value-b.value;
   });
   scores[endIndex] = combined.map(x=>x.value);
   display[endIndex] = combined.map(x=>x.label);
   for(let i=0;i<3;i++){
-    document.getElementById(`e${endIndex}a${i}`).textContent = display[endIndex][i] || "";
+    document.getElementById(`e${endIndex}a${i}`).textContent = display[endIndex][i]||"";
   }
 }
 
