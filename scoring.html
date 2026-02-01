@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Archery Scorecard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      max-width: 850px;
+      margin: 15px auto;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+
+    th {
+      background: #2c3e50;
+      color: white;
+    }
+
+    .end-total, .running-total {
+      font-weight: bold;
+      background: #ecf0f1;
+    }
+
+    .buttons {
+      margin: 15px auto;
+      max-width: 850px;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+    }
+
+    .x { background: gold; font-weight: bold; }
+    .score { background: #3498db; color: white; }
+    .clear { background: #e74c3c; color: white; }
+    .print { background: #2ecc71; color: white; }
+
+    #grandTotal {
+      font-size: 1.4em;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    /* Print-friendly CSS */
+    @media print {
+      body { background: white; }
+      .buttons, #grandTotal { display: none; }
+      table { page-break-inside: avoid; }
+      th, td { border: 1px solid #000; padding: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Archery Scorecard</h1>
+<p>3 arrows per end · 10 ends</p>
+
+<div class="buttons">
+  <button class="x" onclick="addScore(10, true)">X</button>
+  <button class="score" onclick="addScore(10)">10</button>
+  <button class="score" onclick="addScore(9)">9</button>
+  <button class="score" onclick="addScore(8)">8</button>
+  <button class="score" onclick="addScore(7)">7</button>
+  <button class="score" onclick="addScore(6)">6</button>
+  <button class="score" onclick="addScore(5)">5</button>
+  <button class="score" onclick="addScore(4)">4</button>
+  <button class="score" onclick="addScore(3)">3</button>
+  <button class="score" onclick="addScore(2)">2</button>
+  <button class="score" onclick="addScore(1)">1</button>
+  <button class="clear" onclick="clearEnd()">Clear End</button>
+  <button class="print" onclick="window.print()">Print to PDF</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>End</th>
+      <th>Arrow 1</th>
+      <th>Arrow 2</th>
+      <th>Arrow 3</th>
+      <th>End Total</th>
+      <th>Running Total</th>
+    </tr>
+  </thead>
+  <tbody id="scoreTable"></tbody>
+</table>
+
+<div id="grandTotal">Total Score: 0</div>
+
+<script>
+const tableBody = document.getElementById("scoreTable");
+const grandTotalEl = document.getElementById("grandTotal");
+
+let currentEnd = 0;
+let currentArrow = 0;
+
+const scores = [];
+const display = [];
+
+// Build table
+for (let i = 0; i < 10; i++) {
+  scores.push([]);
+  display.push([]);
+
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${i + 1}</td>
+    <td id="e${i}a0"></td>
+    <td id="e${i}a1"></td>
+    <td id="e${i}a2"></td>
+    <td id="e${i}t" class="end-total">0</td>
+    <td id="e${i}r" class="running-total">0</td>
+  `;
+  tableBody.appendChild(row);
+}
+
+// Add score
+function addScore(value, isX = false) {
+  if (currentEnd >= 10) return;
+
+  scores[currentEnd].push(value);
+  display[currentEnd].push(isX ? "X" : value);
+
+  sortAndRender(currentEnd);
+
+  currentArrow++;
+  if (currentArrow === 3) {
+    currentArrow = 0;
+    currentEnd++;
+  }
+
+  calculateTotals();
+}
+
+// Sort arrows: X first, then highest → lowest
+function sortAndRender(endIndex) {
+  const combined = scores[endIndex].map((v, i) => ({
+    value: v,
+    label: display[endIndex][i]
+  }));
+
+  combined.sort((a, b) => {
+    if (a.label === "X") return -1;
+    if (b.label === "X") return 1;
+    return b.value - a.value;
+  });
+
+  scores[endIndex] = combined.map(x => x.value);
+  display[endIndex] = combined.map(x => x.label);
+
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`e${endIndex}a${i}`).textContent = display[endIndex][i] || "";
+  }
+}
+
+// Clear end
+function clearEnd() {
+  let endToClear =
+    currentArrow === 0 && currentEnd > 0
+      ? currentEnd - 1
+      : currentEnd;
+
+  if (endToClear < 0 || endToClear >= 10) return;
+
+  scores[endToClear] = [];
+  display[endToClear] = [];
+
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`e${endToClear}a${i}`).textContent = "";
+  }
+
+  document.getElementById(`e${endToClear}t`).textContent = "0";
+  document.getElementById(`e${endToClear}r`).textContent = "0";
+
+  currentEnd = endToClear;
+  currentArrow = 0;
+
+  calculateTotals();
+}
+
+// Calculate totals + running totals
+function calculateTotals() {
+  let grandTotal = 0;
+
+  scores.forEach((end, e) => {
+    let endTotal = end.reduce((sum, v) => sum + v, 0);
+    document.getElementById(`e${e}t`).textContent = endTotal;
+
+    grandTotal += endTotal;
+    document.getElementById(`e${e}r`).textContent = grandTotal;
+  });
+
+  grandTotalEl.textContent = `Total Score: ${grandTotal}`;
+}
+</script>
+
+</body>
+</html>
