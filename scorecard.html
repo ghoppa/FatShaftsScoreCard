@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archery Scorecard</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 95%;
+  height: 100%;
+  max-width: 500px;
+}
+
+/* Header */
+h1 {
+  font-size: clamp(16px, 4vmin, 28px);
+  margin: 0.2em 0;
+  text-align: center;
+}
+
+#scoreInfo {
+  font-size: clamp(14px, 3vmin, 22px);
+  margin: 0.2em 0 0.5em 0;
+  text-align: center;
+}
+
+/* Table container fills remaining space */
+.table-container {
+  flex: 1; /* expand to fill vertical space */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  flex: 1;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px;
+}
+
+td {
+  font-size: clamp(14px, 4vmin, 22px);
+  line-height: 1;
+}
+
+th {
+  font-size: clamp(12px, 2.5vmin, 18px);
+  background: #2c3e50;
+  color: white;
+}
+
+.end-total, .running-total {
+  font-weight: bold;
+  background: #ecf0f1;
+}
+
+/* Grand total */
+#grandTotal {
+  font-size: clamp(14px, 3vmin, 22px);
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+/* Buttons grid */
+.buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+button {
+  width: 100%;
+  height: 50px;
+  font-size: clamp(12px, 4vmin, 20px);
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.x { background: gold; font-weight: bold; }
+.score { background: #3498db; color: white; }
+.clear { background: #e74c3c; color: white; }
+
+.print {
+  width: 100%;
+  font-size: clamp(12px, 4vmin, 20px);
+  height: 40px;
+  margin: 4px 0;
+}
+
+/* Print adjustments */
+@media print {
+  .buttons-grid, .print { display: none; }
+  table { page-break-inside: avoid; }
+  th, td { border: 1px solid #000; padding: 2px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1 id="scorecardTitle">Archery Scorecard</h1>
+  <p id="scoreInfo">3 arrows per end · 10 ends</p>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>End</th>
+          <th>Arrow 1</th>
+          <th>Arrow 2</th>
+          <th>Arrow 3</th>
+          <th>End Total</th>
+          <th>Running Total</th>
+        </tr>
+      </thead>
+      <tbody id="scoreTable"></tbody>
+    </table>
+  </div>
+
+  <div id="grandTotal">Total Score: 0</div>
+
+  <div class="buttons-grid">
+    <button class="x" onclick="addScore(10,true)">X</button>
+    <button class="score" onclick="addScore(10)">10</button>
+    <button class="score" onclick="addScore(9)">9</button>
+    <button class="score" onclick="addScore(8)">8</button>
+    <button class="score" onclick="addScore(7)">7</button>
+    <button class="score" onclick="addScore(6)">6</button>
+    <button class="score" onclick="addScore(5)">5</button>
+    <button class="score" onclick="addScore(4)">4</button>
+    <button class="score" onclick="addScore(3)">3</button>
+    <button class="score" onclick="addScore(2)">2</button>
+    <button class="score" onclick="addScore(1)">1</button>
+    <button class="clear" onclick="clearEnd()">Clear</button>
+  </div>
+
+  <button class="print" onclick="window.print()">Print Scorecard</button>
+<button class="print" onclick="saveToSheet()">Save to Google Sheet</button>
+
+</div>
+<div id="savingPopup" 
+     style="
+       position: fixed;
+       top: 50%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+       background: rgba(0,0,0,0.8);
+       color: white;
+       padding: 20px 30px;
+       border-radius: 10px;
+       font-size: 1.2rem;
+       display: none;
+       z-index: 9999;
+     ">
+  Saving score…
+</div>
+<script>
+// Pull archer info from localStorage
+const archerName = localStorage.getItem('archerName') || "Archer";
+const distance = localStorage.getItem('distance') || "";
+const targetSize = localStorage.getItem('targetSize') || "";
+
+// Update header
+document.getElementById('scorecardTitle').textContent = `${archerName} Scorecard`;
+document.getElementById('scoreInfo').textContent = `${distance} · ${targetSize}`;
+
+// Score table logic
+const tableBody = document.getElementById("scoreTable");
+const grandTotalEl = document.getElementById("grandTotal");
+
+let currentEnd = 0;
+let currentArrow = 0;
+const scores = [];
+const display = [];
+
+// Build table rows
+for(let i=0;i<10;i++){
+  scores.push([]);
+  display.push([]);
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${i+1}</td>
+    <td id="e${i}a0"></td>
+    <td id="e${i}a1"></td>
+    <td id="e${i}a2"></td>
+    <td id="e${i}t" class="end-total">0</td>
+    <td id="e${i}r" class="running-total">0</td>
+  `;
+  tableBody.appendChild(row);
+}
+
+// Add score
+function addScore(value,isX=false){
+  if(currentEnd>=10) return;
+  scores[currentEnd].push(value);
+  display[currentEnd].push(isX?"X":value);
+  sortAndRender(currentEnd);
+  currentArrow++;
+  if(currentArrow===3){currentArrow=0; currentEnd++;}
+  calculateTotals();
+}
+
+// Sorting X first
+function sortAndRender(endIndex){
+  const combined = scores[endIndex].map((v,i)=>({value:v,label:display[endIndex][i]}));
+  combined.sort((a,b)=>{
+    if(a.label==="X") return -1;
+    if(b.label==="X") return 1;
+    return b.value - a.value;
+  });
+  scores[endIndex] = combined.map(x=>x.value);
+  display[endIndex] = combined.map(x=>x.label);
+  for(let i=0;i<3;i++){
+    document.getElementById(`e${endIndex}a${i}`).textContent = display[endIndex][i]||"";
+  }
+}
+
+// Clear end
+function clearEnd(){
+  let endToClear = currentArrow===0 && currentEnd>0 ? currentEnd-1 : currentEnd;
+  if(endToClear<0 || endToClear>=10) return;
+  scores[endToClear]=[];
+  display[endToClear]=[];
+  for(let i=0;i<3;i++){
+    document.getElementById(`e${endToClear}a${i}`).textContent="";
+  }
+  document.getElementById(`e${endToClear}t`).textContent="0";
+  document.getElementById(`e${endToClear}r`).textContent="0";
+  currentEnd=endToClear;
+  currentArrow=0;
+  calculateTotals();
+}
+
+// Totals
+function calculateTotals(){
+  let grandTotal=0;
+  scores.forEach((end,e)=>{
+    let endTotal=end.reduce((sum,v)=>sum+v,0);
+    document.getElementById(`e${e}t`).textContent=endTotal;
+    grandTotal+=endTotal;
+    document.getElementById(`e${e}r`).textContent=grandTotal;
+  });
+  grandTotalEl.textContent=`Total Score: ${grandTotal}`;
+}
+
+async function saveToSheet() {
+  const popup = document.getElementById("savingPopup");
+  popup.style.display = "block";   // Show popup
+
+  const totalScore = scores.flat().reduce((a,b)=>a+b,0);
+  const endTotals = scores.map(end => end.reduce((a,b)=>a+b,0));
+
+  const payload = {
+    archerName,
+    distance,
+    targetSize,
+    ends: endTotals,
+    totalScore
+  };
+
+  try {
+    await fetch("https://script.google.com/macros/s/AKfycbwGg1VaYSl4uqgStilqlz3R_Yt_agtNhze51UxsvEecppHMiJuC-J3VLAF6yl6xXReY/exec", {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    popup.style.display = "none";  // Hide popup
+    
+  } catch (err) {
+    popup.style.display = "none";  // Hide popup
+    alert("Error saving score");
+    console.error(err);
+  }
+}
+</script>
+
+</body>
+</html>

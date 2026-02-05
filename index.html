@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Archer Setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: #f4f6f8;
+    margin: 0;
+  }
+  h1 {
+    margin-bottom: 20px;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 90%;
+    max-width: 400px;
+  }
+  label {
+    font-size: 1.2rem;
+  }
+  select, input[type="text"], button {
+    padding: 8px;
+    font-size: 1rem;
+  }
+  button {
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #2980b9;
+  }
+</style>
+</head>
+<body>
+
+<h1>Archer Setup</h1>
+
+<form id="setupForm">
+  <label>
+    Archer Name:
+    <input type="text" name="archerName" required>
+  </label>
+
+  <label>
+    Distance:
+    <select name="distance" required>
+      <option value="">Select distance</option>
+      <option value="short">Short</option>
+      <option value="long">Long</option>
+    </select>
+  </label>
+
+  <label>
+    Target Size:
+    <select name="targetSize" required>
+      <option value="">Select target size</option>
+      <option value="60cm">60 cm</option>
+      <option value="40cm">40 cm</option>
+    </select>
+  </label>
+
+  <button type="submit">Start Scoring</button>
+</form>
+
+<script>
+const form = document.getElementById('setupForm');
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+
+  const data = new FormData(form);
+  let archerName = data.get('archerName');
+  const distance = data.get('distance');
+  const targetSize = data.get('targetSize');
+
+  // Convert to Camel Case
+  archerName = toCamelCaseName(archerName);
+
+  // Save in localStorage
+  localStorage.setItem('archerName', archerName);
+  localStorage.setItem('distance', distance);
+  localStorage.setItem('targetSize', targetSize);
+
+  // Go to scorecard page
+  window.location.href = 'scorecard.html';
+});
+
+function toCamelCaseName(name) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+</script>
+
+</body>
+</html>
