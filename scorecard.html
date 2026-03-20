@@ -106,6 +106,7 @@ button {
 
 .x { background: gold; font-weight: bold; }
 .score { background: #3498db; color: white; }
+.miss { background: #FF9900; color: white; }
 .clear { background: #e74c3c; color: white; }
 
 .print {
@@ -149,20 +150,21 @@ button {
 
   <div id="grandTotal">Total Score: 0</div>
 
-  <div class="buttons-grid">
-    <button class="x" onclick="addScore(10,true)">X</button>
-    <button class="score" onclick="addScore(10)">10</button>
-    <button class="score" onclick="addScore(9)">9</button>
-    <button class="score" onclick="addScore(8)">8</button>
-    <button class="score" onclick="addScore(7)">7</button>
-    <button class="score" onclick="addScore(6)">6</button>
-    <button class="score" onclick="addScore(5)">5</button>
-    <button class="score" onclick="addScore(4)">4</button>
-    <button class="score" onclick="addScore(3)">3</button>
-    <button class="score" onclick="addScore(2)">2</button>
-    <button class="score" onclick="addScore(1)">1</button>
-    <button class="clear" onclick="clearEnd()">Clear</button>
-  </div>
+ <div class="buttons-grid">
+  <button class="x" onclick="addScore(10,true)">X</button>
+  <button class="score" onclick="addScore(10)">10</button>
+  <button class="score" onclick="addScore(9)">9</button>
+  <button class="score" onclick="addScore(8)">8</button>
+  <button class="score" onclick="addScore(7)">7</button>
+  <button class="score" onclick="addScore(6)">6</button>
+  <button class="score" onclick="addScore(5)">5</button>
+  <button class="score" onclick="addScore(4)">4</button>
+  <button class="score" onclick="addScore(3)">3</button>
+  <button class="score" onclick="addScore(2)">2</button>
+  <button class="score" onclick="addScore(1)">1</button>
+  <button class="miss" onclick="addScore(0,true)">M</button>
+  <button class="clear" onclick="clearEnd()">Clear</button>
+</div>
 <button class="print" onclick="saveToSheet()">Submit Score</button>
 </div>
 <div id="savingPopup" 
@@ -217,16 +219,15 @@ for(let i=0;i<10;i++){
 }
 
 // Add score
-function addScore(value,isX=false){
+function addScore(value,isLabel=false){
   if(currentEnd>=10) return;
   scores[currentEnd].push(value);
-  display[currentEnd].push(isX?"X":value);
+  display[currentEnd].push(isLabel && value===0 ? "M" : isLabel?"X":value);
   sortAndRender(currentEnd);
   currentArrow++;
   if(currentArrow===3){currentArrow=0; currentEnd++;}
   calculateTotals();
 }
-
 // Sorting X first
 function sortAndRender(endIndex){
   const combined = scores[endIndex].map((v,i)=>({value:v,label:display[endIndex][i]}));
